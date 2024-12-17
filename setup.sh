@@ -29,3 +29,7 @@ $(hostname)-network
 # https://stackoverflow.com/a/58082993 also
 
 docker stack deploy -c ~/.fenrir/kafka/kafka-stack.yml kafka --detach=false
+
+docker stack deploy -c ~/.fenrir/portainer/portainer-stack.yml portainer --detach=false
+
+docker stack deploy -c ~/.fenrir/postgres+metabase/postgres-metabase-stack.yml postgres_metabase --detach=false

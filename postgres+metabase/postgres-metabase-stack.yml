@@ -1,0 +1,72 @@
+version: "3"
+services:
+  postgres:
+    image: "postgres:alpine3.18"
+    hostname: postgres
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 10s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 5s
+    ports:
+      - target: 5432
+        published: 10030
+        mode: host
+    volumes:
+      - ~/.fenrir/postgres+metabase/volumes/postgres/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "test_user"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    networks:
+      - internal_network
+
+
+  metabase:
+    image: metabase/metabase:latest
+    hostname: metabase
+    volumes:
+      - ~/.fenrir/postgres+metabase/volumes/metabase/data/:/metadata.db/
+      - /dev/urandom:/dev/random:ro
+    ports:
+      - target: 3000
+        published: 10031
+        mode: host
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 10s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 5s
+    healthcheck:
+      test: curl --fail -I http://localhost:3000/api/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal_network
+
+networks:
+  internal_network:
+    name: ${FENRIR_DOCKER_NETWORK}
+    driver: overlay
+    attachable: true
+    external: true
