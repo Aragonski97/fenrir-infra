@@ -14,7 +14,7 @@ services:
           - node.labels.orchestration == airflow
     ports:
       - target: 8080
-        published: 10037
+        published: 10040
         mode: host
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]

@@ -10,6 +10,8 @@ docker swarm init --advertise-addr $(echo $TSC_IP)
 
 export DOCKER_LEADER_NODE_ID=$(docker node ls | grep Leader | awk '{print $1}')
 
+
+docker node update --label-add orchestration=airflow $(echo $DOCKER_LEADER_NODE_ID)
 docker node update --label-add service=kafka $(echo $DOCKER_LEADER_NODE_ID)
 
 docker network create \
@@ -33,3 +35,5 @@ docker stack deploy -c ~/.fenrir/kafka/kafka-stack.yml kafka --detach=false
 docker stack deploy -c ~/.fenrir/portainer/portainer-stack.yml portainer --detach=false
 
 docker stack deploy -c ~/.fenrir/postgres+metabase/postgres-metabase-stack.yml postgres_metabase --detach=false
+
+docker stack deploy -c ~/.axiom_infra/fenrir-infrastructure/airflow/airflow-stack.yml airflow --detach=false

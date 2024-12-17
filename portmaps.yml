@@ -1,5 +1,3 @@
-# has no use, other then informational
-
 kafka-stack:
   range: 10000-10029
   services:
@@ -47,4 +45,62 @@ kafka-stack:
   - kafka-ui:
       - target: 8080
         published: 10011
+        mode: host
+
+analytics-stack: 10030-10059
+
+  - postgres:
+      - target: 5432
+        published: 10030
+        mode: host
+  - metabase:
+      - target: 3000
+        published: 10031
+        mode: host
+  - spark:
+      - target: 8080
+        published: 10032
+        mode: host
+      - target: 7077
+        published: 10033
+        mode: host
+  - spark-driver:
+      - target: 4040
+        published: 10034
+        mode: host
+      - target: 18080
+        published: 10035
+        mode: host
+  - spark-worker1:
+      - target: 8081
+        published: 10036
+        mode: host
+
+
+orchestration-stack: 10040-10059
+
+  # airflow
+  - webserver:
+      - target: 8080
+        published: 10040
+        mode: host
+
+
+portainer-stack: 10060-10069
+
+  portainer:
+    - target: 9443
+      published: 10060
+      mode: host
+    - target: 8000
+      published: 10061
+      mode: host
+    - target: 9000
+      published: 10062
+      mode: host
+
+custom: 20000 >
+  - kstream:
+      - target: 8000
+        published: 20000
         mode: host
