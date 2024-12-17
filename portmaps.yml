@@ -1,0 +1,50 @@
+# has no use, other then informational
+
+kafka-stack:
+  range: 10000-10029
+  services:
+    - zookeeper:
+      - target: 2181
+        published: 10000
+        mode: host
+  - zoonavigator:
+      - target: 8000
+        published: 10001
+        mode: host
+  - kafka:
+      internally_exposed:
+        10003:"INTERNAL (19092 before)"
+      externally_exposed:
+      - target: 9092
+        published: 9092
+        mode: host
+      - target: 29092
+        published: 10004
+        mode: host
+      - target: 9999
+        published: 10005
+        mode: host
+  - schema-registry:
+      - target: 8081
+        published: 10006
+        mode: host
+  - rest-proxy:
+      - target: 8082
+        published: 10007
+        mode: host
+  - kafka-connect:
+      - target: 8083
+        published: 10008
+        mode: host
+  - kafdrop:
+      - target: 9000
+        published: 10009
+        mode: host
+  - ksqldb:
+      - target: 8088
+        published: 10010
+        mode: host
+  - kafka-ui:
+      - target: 8080
+        published: 10011
+        mode: host
