@@ -1,0 +1,85 @@
+version: "3"
+services:
+  webserver:
+    image: apache/airflow:latest
+    hostname: webserver
+    env_file: ~/.fenrir/airflow/airflow.env
+    command: webserver
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: vip
+      placement:
+        constraints:
+          - node.labels.orchestration == airflow
+    ports:
+      - target: 8080
+        published: 10037
+        mode: host
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - ~/.fenrir/airflow/volumes/dags:/opt/airflow/dags
+      - ~/.fenrir/airflow/volumes/logs:/opt/airflow/logs
+    networks:
+      - internal_network
+  scheduler:
+    image: apache/airflow:latest
+    hostname: scheduler
+    env_file: ~/.fenrir/airflow/airflow.env
+    command: scheduler
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: vip
+      placement:
+        constraints:
+          - node.labels.orchestration == airflow
+
+    healthcheck:
+      test: ["CMD-SHELL", 'curl --silent http://webserver:8080/health | grep -A 1 scheduler | grep \"healthy\"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - ~/.fenrir/airflow/volumes/dags:/opt/airflow/dags
+      - ~/.fenrir/airflow/volumes/logs:/opt/airflow/logs
+    networks:
+      - internal_network
+
+  airflow-init:
+    image: apache/airflow:latest
+    hostname: airflow-init
+    env_file: ~/.fenrir/airflow/airflow.env
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db upgrade \
+        airflow users list || (
+        airflow db migrate &&
+        airflow users create \
+          -r Admin \
+          -u airflow \
+          -p airflow \
+          -e some_email@gmail.com \
+          -f FirstName \
+          -l LastName \
+        )
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: "none"
+    networks:
+      - internal_network
+
+networks:
+  internal_network:
+    name: ${FENRIR_DOCKER_NETWORK}
+    driver: overlay
+    attachable: true
+    external: true
