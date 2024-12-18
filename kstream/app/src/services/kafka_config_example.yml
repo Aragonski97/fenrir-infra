@@ -1,0 +1,37 @@
+admin:
+  config:
+    bootstrap.servers: hostname:port
+
+schema_registry:
+  url: localhost:8081
+
+consumers:
+  - name: str
+    topic:
+      name: str
+      # list[int] | None
+      # if None, the consumer will subscribe to the topic
+      # otherwise, it will use .assign function for TopicPartitions
+      # ex.
+      partitions:
+        - 0
+        - 1
+    config:
+      bootstrap.servers: hostname:port
+      group.id: str
+      auto.offset.reset: earliest
+      connections.max.idle.ms: int
+
+producers:
+  - name: str
+    topic:
+      name: str
+      # list[int] | None
+      # if None, the producer will produce to the topic w/o partition
+      # otherwise, it will use partition numbers to send messages
+      partitions:
+    config:
+      bootstrap.servers: hostname:port
+      acks: int
+      linger.ms: int
+      batch.size: int
