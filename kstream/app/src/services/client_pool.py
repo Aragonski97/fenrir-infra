@@ -6,7 +6,6 @@ from confluent_kafka.schema_registry import SchemaRegistryClient
 
 from src.services.kafka_context.consumer_context import ConsumerContext
 from src.services.kafka_context.producer_context import ProducerContext
-from src.utils.metainfo import ROOT_DIR
 
 class PoolContext:
 
@@ -15,23 +14,27 @@ class PoolContext:
             consumers: list[ConsumerContext],
             producers: list[ProducerContext],
             schema_registry: SchemaRegistryClient,
-            admin: AdminClient
+            admin: AdminClient,
+            env: dict
     ):
         self.schema_registry = schema_registry
         self.producers = {producer.name: producer for producer in producers}
         self.consumers = {consumer.name: consumer for consumer in consumers}
         self.admin = admin
+        self.env = env
 
     @classmethod
-    def from_yaml(cls, path: Path = ROOT_DIR / "kstream.conf.yml"):
+    def from_yaml(cls, path: Path):
+        """
+        Default config loading method.
+        :return: ChannelPool
+        """
         with open(path, 'r') as f:
             environment = yaml.safe_load(f)
-        admin = AdminClient(environment["kafka"]["admin"]["config"])
-        schema_registry = SchemaRegistryClient({
-            "url": environment["kafka"]["schema_registry"]
-        })
-        consumers = environment["kafka"]["consumers"]
-        producers = environment["kafka"]["producers"]
+        admin = AdminClient(environment["admin"]["config"])
+        schema_registry = SchemaRegistryClient(environment["schema_registry"])
+        consumers = environment["consumers"]
+        producers = environment["producers"]
         consumer_instances = list()
         for consumer in consumers:
             consumer_instance = ConsumerContext(**consumer)
@@ -52,5 +55,8 @@ class PoolContext:
             consumers=consumer_instances,
             producers=producer_instances,
             schema_registry=schema_registry,
-            admin=admin
+            admin=admin,
+            env=environment
         )
+
+

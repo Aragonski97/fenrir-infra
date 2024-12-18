@@ -30,6 +30,10 @@ class ConsumerContext:
             self,
             registry_client: SchemaRegistryClient | None = None
     ):
+        """
+        TODO: Check if the count of partitions matches available partitions
+
+        """
         self._resolve_topic(registry_client)
         self._resolve_subscription()
 

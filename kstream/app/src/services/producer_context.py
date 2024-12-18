@@ -30,6 +30,9 @@ class ProducerContext:
             registry_client: SchemaRegistryClient | None = None
     ):
         self._resolve_topic(registry_client)
+        """
+        TODO: Check if the count of partitions matches available partitions
+        """
 
     def _resolve_topic(
             self,
