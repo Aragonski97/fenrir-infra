@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  devbox:
+    image: fenrir/devbox
+    hostname: devbox
+    ports:
+      - target: 22
+        published: 20022
+        mode: host
+    networks:
+      - internal_network
+
+networks:
+  internal_network:
+    name: ${FENRIR_DOCKER_NETWORK}
+    driver: overlay
+    attachable: true
+    external: true
