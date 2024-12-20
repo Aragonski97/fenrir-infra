@@ -1,62 +1,40 @@
-import yaml
-from pathlib import Path
-
 from confluent_kafka.admin import AdminClient
 from confluent_kafka.schema_registry import SchemaRegistryClient
-
 from src.services.kafka_context.consumer_context import ConsumerContext
 from src.services.kafka_context.producer_context import ProducerContext
+from src.config.app_config import app_config
 
 class PoolContext:
 
-    def __init__(
-            self,
-            consumers: list[ConsumerContext],
-            producers: list[ProducerContext],
-            schema_registry: SchemaRegistryClient,
-            admin: AdminClient,
-            env: dict
-    ):
-        self.schema_registry = schema_registry
-        self.producers = {producer.name: producer for producer in producers}
-        self.consumers = {consumer.name: consumer for consumer in consumers}
-        self.admin = admin
-        self.env = env
+    def __init__(self):
+        self.admin: AdminClient | None = None
+        self.schema_registry: SchemaRegistryClient | None = None
+        self.producers: dict[ProducerContext] | None = None
+        self.consumers: dict[ConsumerContext] | None = None
 
-    @classmethod
-    def from_yaml(cls, path: Path):
-        """
-        Default config loading method.
-        :return: ChannelPool
-        """
-        with open(path, 'r') as f:
-            environment = yaml.safe_load(f)
-        admin = AdminClient(environment["admin"]["config"])
-        schema_registry = SchemaRegistryClient(environment["schema_registry"])
-        consumers = environment["consumers"]
-        producers = environment["producers"]
-        consumer_instances = list()
-        for consumer in consumers:
-            consumer_instance = ConsumerContext(**consumer)
-            if schema_registry:
-                consumer_instance.configure(registry_client=schema_registry)
-            else:
-                consumer_instance.configure()
-            consumer_instances.append(consumer_instance)
-        producer_instances = list()
-        for producer in producers:
-            producer_instance = ProducerContext(**producer)
-            if schema_registry:
-                producer_instance.configure(registry_client=schema_registry)
-            else:
-                producer_instance.configure()
-            producer_instances.append(producer_instance)
-        return cls(
-            consumers=consumer_instances,
-            producers=producer_instances,
-            schema_registry=schema_registry,
-            admin=admin,
-            env=environment
-        )
+    def from_config(self):
+        if app_config.kafka.admin:
+            self.admin = AdminClient(app_config.kafka.admin.config)
+        else:
+            raise ValueError("Kafka admin section missing from config.")
+        if app_config.kafka.schema_registry:
+            self.schema_registry = SchemaRegistryClient(app_config.kafka.schema_registry.model_dump())
+        else:
+            raise ValueError("Kafka schema registry section missing from config.")
+        consumers = list()
+        producers = list()
+        if app_config.kafka.consumers:
+            for consumer_config in app_config.kafka.consumers:
+                consumer = ConsumerContext(**consumer_config.model_dump())
+                consumer.configure(registry_client=self.schema_registry)
+                consumers.append(consumer)
+            self.consumers = {consumer.name: consumer for consumer in consumers}
+        if app_config.kafka.producers:
+            for producer_config in app_config.kafka.producers:
+                producer = ProducerContext(**producer_config.model_dump())
+                producer.configure(registry_client=self.schema_registry)
+                producers.append(producer)
+            self.producers = {producer.name: producer for producer in producers}
+        return
 
-
+pool = PoolContext()

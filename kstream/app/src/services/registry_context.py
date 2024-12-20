@@ -1,3 +1,4 @@
+import datetime
 import json
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from structlog import get_logger
@@ -45,8 +46,31 @@ class RegistryContext:
         self.schema_type = self.schema_latest_version.schema.schema_type
 
     def create_registered_model(self, name):
-        self.registered_model = create_model(
-            f"TopicModel_{name}",
-            __base__=BaseModel,
-            **{key: (type(value) | None, ...) for key, value in self.schema_dict.items()}
-        )
+        if self.schema_type == "AVRO":
+            fields = {item["name"]: item["type"] for item in self.schema_dict.get("fields")}
+            # assumes only nullable single types
+            # will have to change if there are multiple types of fields
+            for field, f_type in fields.items():
+                if isinstance(f_type, list):
+                    fields[field] = f_type[0] if f_type[0] != "null" else f_type[1]
+                    continue
+                # datetime formats
+                elif isinstance(f_type, dict):
+                    fields[field] = 'datetime'
+                    continue
+
+            for field, f_type in fields.items():
+                if f_type == "string":
+                    fields[field] = ( str | None, ... )
+                elif f_type == "float":
+                    fields[field] = ( float | None, ... )
+                elif f_type == "datetime":
+                    fields[field] = ( datetime.datetime | None, ... )
+
+            self.registered_model = create_model(
+                f"TopicModel_{name}",
+                __base__=BaseModel,
+                **fields
+            )
+        else:
+            raise

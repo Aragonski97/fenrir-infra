@@ -22,8 +22,9 @@ class TopicContext:
         self.partitions = list()
 
         if registry_context:
-            self.key_serialization_method = StringSerializer('utf_8')
+            self.key_serialization_method = None
             self.value_serialization_method = None
+            self.registry_context.create_registered_model(name=self.name)
         else:
             self._logger.warning(f"No supplied schema")
 

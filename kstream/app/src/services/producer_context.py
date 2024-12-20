@@ -1,6 +1,6 @@
 from confluent_kafka import Producer, Message, KafkaError
 from confluent_kafka.schema_registry import SchemaRegistryClient
-from confluent_kafka.serialization import SerializationContext, MessageField
+from confluent_kafka.serialization import SerializationContext, MessageField, StringSerializer
 from confluent_kafka.schema_registry.avro import AvroSerializer
 from structlog import get_logger
 import fastavro
@@ -70,7 +70,8 @@ class ProducerContext:
             schema_str=self.topic.registry_context.schema_latest_version.schema.schema_str,
             to_dict=lambda obj, ctx: self.topic.registry_context.registered_model.model_dump(obj, context=ctx)
         )
-        self._logger.error(f"Avro serialization set for {self.name}")
+        self.topic.key_serialization_method = StringSerializer('utf_8')
+        self._logger.info(f"Avro serialization set for {self.name}")
 
     def _configure_protobuf_serialization(self) -> None:
         """

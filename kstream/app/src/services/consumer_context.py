@@ -2,7 +2,7 @@ import fastavro
 from structlog import get_logger
 
 from confluent_kafka import Consumer, TopicPartition, Message
-from confluent_kafka.serialization import SerializationContext, MessageField
+from confluent_kafka.serialization import SerializationContext, MessageField, StringDeserializer
 from confluent_kafka.schema_registry.avro import AvroDeserializer
 from confluent_kafka.schema_registry import SchemaRegistryClient
 
@@ -28,7 +28,7 @@ class ConsumerContext:
 
     def configure(
             self,
-            registry_client: SchemaRegistryClient | None = None
+            registry_client: SchemaRegistryClient
     ):
         """
         TODO: Check if the count of partitions matches available partitions
@@ -39,24 +39,32 @@ class ConsumerContext:
 
     def _resolve_topic(
             self,
-            registry_client: SchemaRegistryClient | None = None
+            registry_client: SchemaRegistryClient
     ):
-        if registry_client:
+        schema_name = self._topic_config.get("schema_name")
+        topic_name = self._topic_config.get("name")
+        partitions = self._topic_config["partitions"]
+        if not topic_name:
+            raise ValueError("name param not provided in the config file under topic")
+        if schema_name:
             registry_context = RegistryContext(
                 registry_client=registry_client,
-                schema_name=self._topic_config["schema_name"]
+                schema_name=schema_name
             )
             self.topic = TopicContext(
-                name=self._topic_config["name"],
-                partitions=self._topic_config["partitions"],
+                name=topic_name,
+                partitions=partitions,
                 registry_context = registry_context
             )
             self._configure_serialization()
+            self._logger.info(f"Schema {schema_name} configured for topic for {self.topic.name}")
             return
-        self.topic = TopicContext(
-            name=self._topic_config["name"],
-            partitions=self._topic_config["partitions"]
-        )
+        else:
+            self.topic = TopicContext(
+                name=topic_name,
+                partitions=partitions
+            )
+            self._logger.info(f"No schema_name configured for topic for {self.topic.name}")
         return
 
     def _resolve_subscription(self):
@@ -83,7 +91,8 @@ class ConsumerContext:
             schema_str=self.topic.registry_context.schema_latest_version.schema.schema_str,
             from_dict=lambda obj, ctx: self.topic.registry_context.registered_model.model_validate(obj, context=ctx)
         )
-        self._logger.error(f"Avro serialization set for {self.name}")
+        self.topic.key_serialization_method = StringDeserializer('utf_8')
+        self._logger.info(f"Avro serialization set for {self.name}")
 
     def _configure_protobuf_serialization(self) -> None:
         self._logger.error("Protobuf schema not implemented yet!")
@@ -131,38 +140,36 @@ class ConsumerContext:
         self._consumer.commit(offsets=[tp], asynchronous=False)
 
     def consume(self):
-        while True:
-            try:
-                self._logger.info(event="Requesting a message...")
-                msg = self._consumer.poll(3600)
-                if msg is None:
-                    self._logger.info(event="No new message received after an hour, polling again...")
-                    continue
-                self._logger.info(event="Message received.", topic=msg.topic(), partition=msg.partition())
-                if msg.error():
-                    self._logger.error(
-                        event="While extracting the message error occured.",
-                        msg_error=msg.error(),
-                        fallback="Skipping..."
-                    )
-                    return None, None
-                if self.topic.registry_context.registry_client:
-                    key = self.topic.key_serialization_method(
-                        msg.key(),
-                        SerializationContext(msg.topic(), MessageField.KEY)
-                    )
-                    value = self.topic.value_serialization_method(
-                        msg.value(),
-                        SerializationContext(msg.topic(), MessageField.VALUE)
-                    )
-                    yield key, value
-                else:
-                    yield msg.key(), msg.value()
-
-            except Exception as err:
-                self._logger.error(event="Consuming a message...", err=err)
-                self.close()
-                raise err
+        try:
+            self._logger.info(event="Requesting a message...")
+            msg = self._consumer.poll(3600)
+            if msg is None:
+                self._logger.info(event="No new message received after an hour, polling again...")
+                return None
+            self._logger.info(event="Message received.", topic=msg.topic(), partition=msg.partition())
+            if msg.error():
+                self._logger.error(
+                    event="While extracting the message error occured.",
+                    msg_error=msg.error(),
+                    fallback="Skipping..."
+                )
+                return None, None
+            if self.topic.registry_context.registry_client:
+                key = self.topic.key_serialization_method(
+                    msg.key(),
+                    SerializationContext(msg.topic(), MessageField.KEY)
+                )
+                value = self.topic.value_serialization_method(
+                    msg.value(),
+                    SerializationContext(msg.topic(), MessageField.VALUE)
+                )
+                return key, value
+            else:
+                return msg.key(), msg.value()
+        except Exception as err:
+            self._logger.error(event="Consuming a message...", err=err)
+            self.close()
+            raise err
 
     def close(self):
         self._logger.info(event=f"Closing consumer: {self.name}")

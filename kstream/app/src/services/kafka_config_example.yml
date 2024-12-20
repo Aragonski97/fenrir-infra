@@ -1,12 +1,12 @@
 admin:
   config:
-    bootstrap.servers: hostname:port
+    bootstrap.servers: hostname:9092
 
 schema_registry:
-  url: localhost:8081
+  url: hostname:8081
 
 consumers:
-  - name: str
+  - name: strp
     topic:
       name: str
       # list[int] | None
@@ -16,8 +16,9 @@ consumers:
       partitions:
         - 0
         - 1
+      schema_name:
     config:
-      bootstrap.servers: hostname:port
+      bootstrap.servers: hostname:9092
       group.id: str
       auto.offset.reset: earliest
       connections.max.idle.ms: int
@@ -30,6 +31,7 @@ producers:
       # if None, the producer will produce to the topic w/o partition
       # otherwise, it will use partition numbers to send messages
       partitions:
+      schema_name:
     config:
       bootstrap.servers: hostname:port
       acks: int
