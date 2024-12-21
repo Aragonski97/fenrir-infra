@@ -7,7 +7,7 @@ name = "pypi"
 structlog = "==24.4.0"
 pyyaml = "==6.0.2"
 fastavro = "==1.10.0"
-confluent-kafka = "==2.6.2"
+confluent-kafka = {extras = ["avro"], version = "==2.6.2"}
 pydantic = "==2.10.4"
 pydantic-settings = "==2.7.0"
 

@@ -28,4 +28,4 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/Aragonski97/confluent-kafka-yaml"
 Changelog = "https://github.com/Aragonski97/confluent-kafka-yaml/releases"
-Issues = "https://github.com/simonw/confluent-kafka-yaml/issues"
+Issues = "https://github.com/Aragonski97/confluent-kafka-yaml/issues"
