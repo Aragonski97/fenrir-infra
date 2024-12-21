@@ -1,3 +1,11 @@
+# devbox is a docker container that is meant to be sshd into
+# and used as a devbox that is connected to the docker swarm network
+# so that we can use DNS from internal docker swarm system in Pycharm
+# As a professional Pycharm user, you can create interpreter 'On SSH',
+# which can be used to ssh into container and do all the work from inside the running container.
+# Should there be any problems with the environment, you can always reset the container and enjoy
+# no worries.
+
 version: '3'
 
 services:
@@ -5,17 +13,33 @@ services:
     image: fenrir/devbox
     hostname: devbox
     volumes:
-     - ~/.fenrir/devbox/volumes/data:/code
+     - $FENRIR_ROOT_DIR/devbox/volumes/data:/code
     ports:
       - target: 22
         published: 20022
         mode: host
     networks:
       - internal_network
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.labels.dev == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 5s
 
 networks:
   internal_network:
-    name: ${FENRIR_DOCKER_NETWORK}
+    name: $FENRIR_DOCKER_NETWORK
     driver: overlay
     attachable: true
     external: true

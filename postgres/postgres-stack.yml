@@ -1,0 +1,44 @@
+version: "3"
+
+services:
+  postgres:
+    image: "postgres:alpine3.18"
+    hostname: postgres
+    volumes:
+      - $FENRIR_ROOT_DIR/postgres/volumes/data:/var/lib/postgresql/data
+    ports:
+      - target: 5432
+        published: 10030
+        mode: host
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+          - node.labels.postgres == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 5s
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 60s
+      retries: 3
+      start_period: 5s
+    networks:
+      - internal_network
+
+networks:
+  internal_network:
+    name: $FENRIR_DOCKER_NETWORK
+    driver: overlay
+    attachable: true
+    external: true

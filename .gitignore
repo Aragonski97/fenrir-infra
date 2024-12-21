@@ -1,3 +1,31 @@
-kafka/config_store/*
-airflow/airflow.env
+# airflow
+airflow/volumes/webserver/additional/*
+airflow/volumes/webserver/data/*
+airflow/volumes/webserver/logs/*
+airflow/volumes/webserver/templates/*
+airflow/volumes/scheduler/templates/*
+airflow/volumes/scheduler/additional/*
+airflow/volumes/scheduler/data/*
+airflow/volumes/scheduler/logs/*
 airflow/airflow.cfg
+airflow/airflow.env
+
+# kafka
+kafka/config_store/*
+kafka/volumes/broker-0/data/*
+kafka/volumes/connect/data/*
+kafka/volumes/zookeeper/data/*
+kafka/volumes/zookeeper/logs/*
+
+# portainer
+portainer/volumes/data/*
+
+# metabase
+analytics/volumes/metabase/data/*
+
+
+# postgres
+postgres/volumes/data/*
+
+# devbox
+devbox/volumes/data/*

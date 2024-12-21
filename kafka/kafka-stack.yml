@@ -15,15 +15,25 @@ services:
       ZOOKEEPER_SERVER_ID: 1
       ZOOKEEPER_SERVERS: zookeeper:2888:3888
     volumes:
-      - ~/.fenrir/kafka/volumes/zookeeper/data:/var/lib/zookeeper/data
-      - ~/.fenrir/kafka/volumes/zookeeper/log:/var/lib/zookeeper/log
+      - $FENRIR_ROOT_DIR/kafka/volumes/zookeeper/data:/var/lib/zookeeper/data
+      - $FENRIR_ROOT_DIR/kafka/volumes/zookeeper/logs:/var/lib/zookeeper/log
     deploy:
       mode: replicated
       replicas: 1
-      endpoint_mode: vip
       placement:
         constraints:
-          - node.labels.service == kafka
+          - node.labels.kafka == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 5s
     networks:
       - internal_network
 
@@ -36,13 +46,25 @@ services:
     environment:
       HTTP_PORT: 8000
       AUTO_CONNECT_CONNECTION_STRING: zookeeper:2181
+    depends_on:
+      - zookeeper
     deploy:
       mode: replicated
       replicas: 1
-      endpoint_mode: vip
       placement:
         constraints:
-          - node.labels.service == kafka
+          - node.labels.kafka == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 5s
     networks:
       - internal_network
 
@@ -51,7 +73,7 @@ services:
     hostname: kafka
     ports:
       - target: 9092
-        published: 10002
+        published: 9092
         mode: host
       - target: 29092
         published: 10004
@@ -60,10 +82,10 @@ services:
         published: 10005
         mode: host
     environment:
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,DOCKER:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:10003,EXTERNAL://0.0.0.0:9092,DOCKER://host.docker.internal:10004
-      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,DOCKER:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:10003,EXTERNAL://${TSC_IP}:9092,DOCKER://host.docker.internal:10004
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_BROKER_ID: 1
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -75,17 +97,29 @@ services:
       KAFKA_MAX_REQUEST_SEIZE: "5242880"
       KAFKA_MESSAGE_MAX_BYTES: "5242880"
       KAFKA_MAX_PARTITION_FETCH_BYTES: "5242880"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
+      - zoonavigator
     volumes:
-      - ~/.fenrir/kafka/volumes/broker-0/data:/var/lib/kafka/data
+      - $FENRIR_ROOT_DIR/kafka/volumes/broker-0/data:/var/lib/kafka/data
     deploy:
       mode: replicated
       replicas: 1
-      endpoint_mode: vip
       placement:
         constraints:
-          - node.labels.service == kafka
+          - node.labels.kafka == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 5s
     networks:
       - internal_network
 
@@ -97,19 +131,28 @@ services:
         published: 10006
         mode: host
     environment:
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:10003
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:10003
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
     depends_on:
-      - zookeeper
       - kafka
     deploy:
       mode: replicated
       replicas: 1
-      endpoint_mode: vip
       placement:
         constraints:
-          - node.labels.service == kafka
+          - node.labels.kafka == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 5s
     networks:
       - internal_network
 
@@ -126,16 +169,28 @@ services:
       KAFKA_REST_HOST_NAME: rest-proxy
       KAFKA_REST_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:10003
     depends_on:
-      - zookeeper
       - kafka
       - schema-registry
     deploy:
       mode: replicated
       replicas: 1
-      endpoint_mode: vip
       placement:
         constraints:
-          - node.labels.service == kafka
+          - node.labels.kafka == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 5s
+    networks:
+      - internal_network
+
     networks:
       - internal_network
 
@@ -146,6 +201,8 @@ services:
       - target: 8083
         published: 10008
         mode: host
+    volumes:
+      - $FENRIR_ROOT_DIR/kafka/volumes/connect/jars:/etc/kafka-connect/jars/'
     environment:
       CONNECT_BOOTSTRAP_SERVERS: "kafka:10003"
       CONNECT_REST_PORT: 8083
@@ -158,7 +215,6 @@ services:
       CONNECT_VALUE_CONVERTER: 'io.confluent.connect.json.JsonSchemaConverter'
       CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
       CONNECT_INTERNAL_KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
-
       CONNECT_INTERNAL_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
       CONNECT_REST_ADVERTISED_HOST_NAME: 'kafka-connect'
       CONNECT_LOG4J_ROOT_LOGLEVEL: 'INFO'
@@ -167,10 +223,7 @@ services:
       CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: '1'
       CONNECT_CONFIG_OFFSET_STORAGE_REPLICATION_FACTOR: '1'
       CONNECT_CONFIG_STATUS_STORAGE_REPLICATION_FACTOR: '1'
-    volumes:
-      - ~/.fenrir/kafka/volumes/connect/jars:/etc/kafka-connect/jars/'
     depends_on:
-      - zookeeper
       - kafka
       - schema-registry
       - rest-proxy
@@ -191,10 +244,20 @@ services:
     deploy:
       mode: replicated
       replicas: 1
-      endpoint_mode: vip
       placement:
         constraints:
-          - node.labels.service == kafka
+          - node.labels.kafka == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 5s
     networks:
       - internal_network
 
@@ -205,6 +268,8 @@ services:
       - target: 8088
         published: 10010
         mode: host
+    volumes:
+      - $FENRIR_ROOT_DIR/kafka/volumes/connect/jars:/etc/kafka-connect/jars/'
     environment:
       KSQL_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:10003
       KSQL_KSQL_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
@@ -213,16 +278,28 @@ services:
       KSQL_KSQL_SERVICE_ID: ksqldb_
       KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
       KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+      KSQL_INTERNAL_TOPIC_REPLICAS: 1
+      KSQL_INTERNAL_TOPIC_MIN_INSYNC_REPLICAS: 1
     depends_on:
       - zookeeper
       - kafka
     deploy:
       mode: replicated
       replicas: 1
-      endpoint_mode: vip
       placement:
         constraints:
-          - node.labels.service == kafka
+          - node.labels.kafka == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 5s
     networks:
       - internal_network
 
@@ -237,13 +314,24 @@ services:
       KAFKA_BROKERCONNECT: 'kafka:10003'
     depends_on:
       - kafka
+      - schema-registry
     deploy:
       mode: replicated
       replicas: 1
-      endpoint_mode: vip
       placement:
         constraints:
-          - node.labels.service == kafka
+          - node.labels.kafka == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 5s
     networks:
       - internal_network
 
@@ -265,16 +353,26 @@ services:
     deploy:
       mode: replicated
       replicas: 1
-      endpoint_mode: vip
       placement:
         constraints:
-          - node.labels.service == kafka
+          - node.labels.kafka == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 5s
     networks:
       - internal_network
 
 networks:
   internal_network:
-    name: ${FENRIR_DOCKER_NETWORK}
+    name: $FENRIR_DOCKER_NETWORK
     driver: overlay
     attachable: true
     external: true
