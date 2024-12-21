@@ -2,7 +2,7 @@ version: '3'
 
 services:
   agent:
-    image: portainer/agent:2.21.4
+    image: portainer/agent:2.25.1-alpine
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/volumes:/var/lib/docker/volumes
@@ -27,7 +27,7 @@ services:
       - internal_network
 
   portainer:
-    image: portainer/portainer-ce:2.21.4
+    image: portainer/portainer-ce:2.25.1-alpine
     command: -H tcp://tasks.agent:9001 --tlsskipverify
     volumes:
       - $FENRIR_ROOT_DIR/portainer/volumes/data:/data

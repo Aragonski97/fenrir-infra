@@ -4,7 +4,7 @@ version: '3'
 
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.2.1
+    image: confluentinc/cp-zookeeper:7.8.0
     hostname: zookeeper
     ports:
       - target: 2181
@@ -38,7 +38,7 @@ services:
       - internal_network
 
   zoonavigator:
-    image: elkozmon/zoonavigator:1.1.1
+    image: elkozmon/zoonavigator:1.1.3
     hostname: zoonavigator
     ports:
       - target: 8000
@@ -69,7 +69,7 @@ services:
       - internal_network
 
   kafka:
-    image: confluentinc/cp-kafka:7.2.1
+    image: confluentinc/cp-kafka:7.8.0
     hostname: kafka
     ports:
       - target: 9092
@@ -124,7 +124,7 @@ services:
       - internal_network
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:7.2.1
+    image: confluentinc/cp-schema-registry:7.8.0
     hostname: schema-registry
     ports:
       - target: 8081
@@ -157,7 +157,7 @@ services:
       - internal_network
 
   rest-proxy:
-    image: confluentinc/cp-kafka-rest:7.2.1
+    image: confluentinc/cp-kafka-rest:7.8.0
     hostname: rest-proxy
     ports:
       - target: 8082
@@ -195,7 +195,7 @@ services:
       - internal_network
 
   kafka-connect:
-    image: confluentinc/cp-kafka-connect:7.4.1
+    image: confluentinc/cp-kafka-connect:7.8.0
     hostname: kafka-connect
     ports:
       - target: 8083
@@ -262,7 +262,7 @@ services:
       - internal_network
 
   ksqldb:
-    image: confluentinc/cp-ksqldb-server:7.2.1
+    image: confluentinc/cp-ksqldb-server:7.8.0
     hostname: ksqldb
     ports:
       - target: 8088
@@ -304,7 +304,7 @@ services:
       - internal_network
 
   kafdrop:
-    image: obsidiandynamics/kafdrop
+    image: obsidiandynamics/kafdrop:4.1.0
     hostname: kafdrop
     ports:
       - target: 9000
@@ -336,7 +336,7 @@ services:
       - internal_network
 
   kafka-ui:
-    image: provectuslabs/kafka-ui
+    image: provectuslabs/kafka-ui:v0.7.2
     hostname: kafka-ui
     ports:
       - target: 8080

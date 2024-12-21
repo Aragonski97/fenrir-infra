@@ -1,7 +1,7 @@
 version: "3"
 services:
   metabase:
-    image: metabase/metabase:latest
+    image: metabase/metabase:v0.51.9.4
     hostname: metabase
     volumes:
       - $FENRIR_ROOT_DIR/analytics/volumes/metabase/data/:/metadata.db/
