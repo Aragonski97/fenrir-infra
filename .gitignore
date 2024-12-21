@@ -29,3 +29,5 @@ postgres/volumes/data/*
 
 # devbox
 devbox/volumes/data/*
+
+commit_message.txt
