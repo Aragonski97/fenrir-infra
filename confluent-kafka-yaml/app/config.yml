@@ -1,3 +1,7 @@
+# template by which you we can instantiate a pool of consumers/producers, schema registry and an Admin Client
+# to help us avoid boilerplate coding. Seems to me that confluent-kafka's APIs are a tad too low-level than I 
+# need them to be.
+
 kafka:
   admin:
     config:

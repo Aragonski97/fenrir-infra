@@ -1,4 +1,6 @@
-FROM ubuntu:24.04 AS OSBuild
+FROM ubuntu:24.04
+
+# 24.04 is python3.12 by default
 
 RUN apt-get update && apt-get install -y openssh-server
 RUN mkdir /var/run/sshd
@@ -12,8 +14,6 @@ RUN echo "AddressFamily any" >> /etc/ssh/sshd_config
 RUN echo "ListenAddress 0.0.0.0" >> /etc/ssh/sshd_config
 RUN echo "PermitTTY yes" >> /etc/ssh/sshd_config
 
-WORKDIR /code
-
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
@@ -22,9 +22,9 @@ RUN apt-get update && apt-get install -y \
     nano \
     openjdk-11-jdk
 
-ENV DEBIAN_FRONTEND=noninteractive
-
 WORKDIR /code
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN echo "cd /code" >> ~/.bashrc
 

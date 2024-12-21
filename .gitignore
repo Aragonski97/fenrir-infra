@@ -30,4 +30,8 @@ postgres/volumes/data/*
 # devbox
 devbox/volumes/data/*
 
+# confluent-kafka-yaml
+confluent-kafka-yaml/app/src/config/structlog_config.py
+
+# miscellaneous
 commit_message.txt

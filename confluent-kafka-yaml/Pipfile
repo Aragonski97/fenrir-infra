@@ -4,12 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-structlog = "*"
-pyyaml = "*"
-fastavro = "*"
-confluent-kafka = {extras = ["avro"], version = "*"}
-pydantic = "*"
-pydantic-settings = "*"
+structlog = "==24.4.0"
+pyyaml = "==6.0.2"
+fastavro = "==1.10.0"
+confluent-kafka = "==2.6.2"
+pydantic = "==2.10.4"
+pydantic-settings = "==2.7.0"
 
 [dev-packages]
 

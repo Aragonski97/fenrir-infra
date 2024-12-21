@@ -1,0 +1,31 @@
+[project]
+name = "confluent-kafka-yaml"
+version = "1.0"
+description = "Load all your confluent-kafka clients from yaml config file."
+readme = "README.md"
+authors = [{ name = "Lazar Jovanovic" }]
+license = { text = "Apache-2.0" }
+requires-python = ">=3.12"
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Development Status :: 3 - Alpha",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: Pydantic :: 2",
+    "Intended Audience :: Information Technology"
+]
+# 'tomli >= 1.1.0; python_version ~= "3.12"'
+dependencies = [
+    'fastavro >= 1.10.0',
+    'pydantic >= 2.10.4',
+    'pydantic-settings >= 2.7.0',
+    'pyyaml >= 6.0.2',
+    'confluent-kafka["avro"] >= 2.6.2',
+    'structlog >= 24.4.0'
+]
+
+
+[project.urls]
+Homepage = "https://github.com/Aragonski97/confluent-kafka-yaml"
+Changelog = "https://github.com/Aragonski97/confluent-kafka-yaml/releases"
+Issues = "https://github.com/simonw/confluent-kafka-yaml/issues"
