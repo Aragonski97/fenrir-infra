@@ -49,6 +49,6 @@ docker stack deploy -c ${FENRIR_ROOT_DIR}/postgres/postgres-stack.yml postgres -
 
 docker stack deploy -c ${FENRIR_ROOT_DIR}/analytics/metabase-stack.yml metabase --detach=false
 
-docker stack deploy -c ${FENRIR_ROOT_DIR}/airflow/local-executor-airflow-stack.yml airflow --detach=false
+docker stack deploy -c ${FENRIR_ROOT_DIR}/airflow/airflow-stack.yml airflow --detach=false
 
 docker stack deploy -c ${FENRIR_ROOT_DIR}/devbox/devbox-stack.yml devbox --detach=false

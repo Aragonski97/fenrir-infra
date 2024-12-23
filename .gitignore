@@ -1,13 +1,4 @@
 # airflow
-airflow/volumes/webserver/additional/*
-airflow/volumes/webserver/data/*
-airflow/volumes/webserver/logs/*
-airflow/volumes/webserver/templates/*
-airflow/volumes/scheduler/templates/*
-airflow/volumes/scheduler/additional/*
-airflow/volumes/scheduler/data/*
-airflow/volumes/scheduler/logs/*
-airflow/airflow.cfg
 airflow/airflow.env
 
 # kafka
@@ -23,9 +14,9 @@ portainer/volumes/data/*
 # metabase
 analytics/volumes/metabase/data/*
 
-
 # postgres
-postgres/volumes/data/*
+postgres/volumes-16/data/*
+postgres/volumes-17/data/*
 
 # devbox
 devbox/volumes/data/*

@@ -1,0 +1,6 @@
+1. confluent-kafka-config moved to https://github.com/Aragonski97/confluent-kafka-config
+2. airflow changes to gitsync: GIT_SYNC_USERNAME GIT_SYNC_PASSWORD not needed at the moment.
+3. metabase/metabase-stack.yml no longer an executable
+4. kafka/kafka-stack.yml no longer an executable
+5. portainer/portainer-stack.yml no longer an executable
+6. postgres/postgres-stack.yml no longer an executable

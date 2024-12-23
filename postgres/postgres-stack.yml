@@ -2,10 +2,13 @@ version: "3"
 
 services:
   postgres:
-    image: postgres:14.15-alpine3.21
+    image: postgres:17
     hostname: postgres
     volumes:
-      - $FENRIR_ROOT_DIR/postgres/volumes/data:/var/lib/postgresql/data
+      - $FENRIR_ROOT_DIR/postgres/volumes-17/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     ports:
       - target: 5432
         published: 10030

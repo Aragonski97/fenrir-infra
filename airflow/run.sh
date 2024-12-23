@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker stack deploy -c local-executor-airflow-stack.yml airflow
+docker stack deploy -c airflow-stack.yml -d=false airflow

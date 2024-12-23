@@ -78,8 +78,8 @@ services:
     image: k8s.gcr.io/git-sync/git-sync:v3.2.2
     hostname: gitsync
     environment:
-      GIT_SYNC_USERNAME: 
-      GIT_SYNC_PASSWORD:
+#      GIT_SYNC_USERNAME: 
+#      GIT_SYNC_PASSWORD:
       GIT_SYNC_REPO: https://github.com/Aragonski97/fenrir-infra.git
       GIT_SYNC_DEST: dags
       GIT_SYNC_BRANCH: master
