@@ -21,6 +21,12 @@ postgres/volumes-17/data/*
 # devbox
 devbox/volumes/data/*
 
+# spark
+spark/spark.env
+spark/spark-worker.env
+spark/mounted_volumes/
+spark/volumes/
+
 # confluent-kafka-yaml
 confluent-kafka-yaml/app/src/config/structlog_config.py
 

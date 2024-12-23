@@ -1,0 +1,83 @@
+# Copyright Broadcom, Inc. All Rights Reserved.
+# SPDX-License-Identifier: APACHE-2.0
+
+# inspiration from https://github.com/bitnami/containers/blob/main/bitnami/spark/3.5/debian-12/docker-compose.yml
+
+services:
+  spark:
+    image: docker.io/bitnami/spark:3.5
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: vip
+      placement:
+        constraints:
+          - node.labels.analysis == spark
+    hostname: spark
+    user: root
+    ports:
+    - target: 8080
+      published: 10032
+      mode: host
+    - target: 7077
+      published: 10033
+      mode: host
+    networks:
+      - internal_network
+    command:
+      - /bin/bash
+      - -c
+      - |
+        apt-get update && apt-get install curl -y
+        echo "spark:x:1001:0:spark:/opt/bitnami/spark:/bin/bash" >> /etc/passwd
+        echo "spark:*L17885:0:99999:7:::" >> /etc/shadow
+        cat << EOF > /opt/bitnami/spark/conf/spark-defaults.conf
+        spark master                       spark://spark:7077
+        spark.eventLog.enabled             true
+        spark.eventLog.dir                 $$LOGDIR
+        spark.history.fs.log.Directory     $$LOGDIR
+        EOF
+        mkdir /opt/bitnami/spark/drivers
+        cd /opt/bitnami/spark/drivers
+        /opt/bitnami/scripts/spark/run.sh
+
+  spark-worker:
+    image: docker.io/bitnami/spark:3.5
+    deploy:
+      mode: replicated
+      endpoint_mode: vip
+      placement:
+        constraints:
+          - node.labels.analysis == spark
+    hostname: spark-worker1
+    user: root
+    ports:
+    - target: 8081
+      published: 10036
+      mode: host
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    networks:
+      - internal_network
+
+networks:
+  internal_network:
+    name: ${FENRIR_DOCKER_NETWORK}
+    driver: overlay
+    attachable: true
+    external: true
