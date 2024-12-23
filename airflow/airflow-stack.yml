@@ -1,0 +1,157 @@
+# inspiration from https://github.com/apache/airflow/issues/8605
+
+version: "3"
+x-airflow-environment: &airflow-environment
+  AIRFLOW_UID: 1500
+  AIRFLOW_GID: 0
+  POSTGRES_USER: airflow
+  POSTGRES_PASSWORD: airflow
+  POSTGRES_DB: airflow
+  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+  AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+  AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "True"
+  AIRFLOW__CORE__KILLED_TASK_CLEANUP_TIME: 604800
+  AIRFLOW__CORE__EXECUTOR: LocalExecutor
+  AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+  AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: "False"
+  AIRFLOW__CORE__ENABLE_XCOM_PICKLING: "True"  # because of https://github.com/apache/airflow/issues/13487
+  AIRFLOW__WEBSERVER__BASE_URL: https://airflow.example.com
+  AIRFLOW__WEBSERVER__ENABLE_PROXY_FIX: "True"
+  AIRFLOW__WEBSERVER__RBAC: "True"
+
+services:
+#  traefik:
+#    image: traefik:v2.4
+#    container_name: traefik
+#    command:
+#      - --ping=true
+#      - --providers.docker=true
+#      - --providers.docker.exposedbydefault=false
+#      - --entrypoints.web.address=:80
+#      - --entrypoints.websecure.address=:443
+#      # HTTP -> HTTPS redirect
+#      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+#      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+#      # TLS config
+#      - --certificatesresolvers.myresolver.acme.dnschallenge=true
+#      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
+#      ## Comment following line for a production deployment
+#      - --certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+#      ## See https://doc.traefik.io/traefik/https/acme/#providers for other providers
+#      - --certificatesresolvers.myresolver.acme.dnschallenge.provider=digitalocean
+#      - --certificatesresolvers.myresolver.acme.email=user@example.com
+#    ports:
+#      - 80:80
+#      - 443:443
+#    environment:
+#      # See https://doc.traefik.io/traefik/https/acme/#providers for other providers
+#      DO_AUTH_TOKEN:
+#    restart: always
+#    healthcheck:
+#      test: ["CMD", "traefik", "healthcheck", "--ping"]
+#      interval: 10s
+#      timeout: 10s
+#      retries: 5
+#    volumes:
+#      - certs:/letsencrypt
+#      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+
+  # Required because of DockerOperator. For secure access and handling permissions.
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:0.1.1
+    environment:
+      CONTAINERS: 1
+      IMAGES: 1
+      AUTH: 1
+      POST: 1
+    user: root
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: always
+    networks:
+      - internal_network
+
+  # Allows to deploy Dags on pushes to master
+  gitsync:
+    image: k8s.gcr.io/git-sync/git-sync:v3.2.2
+    hostname: gitsync
+    environment:
+      GIT_SYNC_USERNAME: 
+      GIT_SYNC_PASSWORD:
+      GIT_SYNC_REPO: https://github.com/Aragonski97/fenrir-infra.git
+      GIT_SYNC_DEST: dags
+      GIT_SYNC_BRANCH: master
+      GIT_SYNC_WAIT: 60
+    volumes:
+      - dags:/tmp:rw
+    restart: always
+    networks:
+      - internal_network
+
+  webserver:
+    image: apache/airflow:2.10.4-python3.12
+    hostname: airflow_webserver
+    ports:
+      - target: 8080
+        published: 10040
+        mode: host
+    environment:
+      <<: *airflow-environment
+    command: webserver
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    volumes:
+      - dags:/opt/airflow/sync
+      - logs:/opt/airflow/logs
+    networks:
+      - internal_network
+    
+#    depends_on:
+#      - git-sync
+#      - traefik
+#    labels:
+#      - traefik.enable=true
+#      - traefik.http.routers.webserver.rule=Host(`airflow.example.com`)
+#      - traefik.http.routers.webserver.entrypoints=websecure
+#      - traefik.http.routers.webserver.tls.certresolver=myresolver
+#      - traefik.http.services.webserver.loadbalancer.server.port=8080
+
+  scheduler:
+    image: apache/airflow:2.10.4-python3.12
+    hostname: airflow_scheduler
+    environment:
+      <<: *airflow-environment
+    command: scheduler
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", 'curl --silent http://airflow_webserver:8080/health | grep -A 1 scheduler | grep \"healthy\"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - dags:/opt/airflow/sync
+      - logs:/opt/airflow/logs
+    depends_on:
+      - git-sync
+      - webserver
+    networks:
+      - internal_network
+
+networks:
+  internal_network:
+    name: $FENRIR_DOCKER_NETWORK
+    driver: overlay
+    attachable: true
+    external: true
+
+volumes:
+  dags:
+  logs:
+#  certs:
+
