@@ -35,8 +35,6 @@ Whether you need to scrape, ingest, process, or visualize data, this platform is
 - Docker-ce Engine
 - Tailscale if you want secure remote access, otherwise, please modify setup.sh for advertised address of docker swarm manager node.
 
-### **IN DEVELOPMENT, NOT PRODUCTION-READY**
-
 ### **Deploy the Platform**
 ```bash
 # Clone the repository
