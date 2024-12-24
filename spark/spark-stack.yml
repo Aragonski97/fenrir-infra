@@ -19,9 +19,8 @@ services:
       endpoint_mode: vip
       placement:
         constraints:
-          - node.labels.analysis == spark
+          - node.labels.spark == true
     hostname: spark
-    user: root
     ports:
     - target: 8080
       published: 10032
@@ -31,22 +30,6 @@ services:
       mode: host
     networks:
       - internal_network
-    command:
-      - /bin/bash
-      - -c
-      - |
-        apt-get update && apt-get install curl -y
-        echo "spark:x:1001:0:spark:/opt/bitnami/spark:/bin/bash" >> /etc/passwd
-        echo "spark:*L17885:0:99999:7:::" >> /etc/shadow
-        cat << EOF > /opt/bitnami/spark/conf/spark-defaults.conf
-        spark master                       spark://spark:7077
-        spark.eventLog.enabled             true
-        spark.eventLog.dir                 $$LOGDIR
-        spark.history.fs.log.Directory     $$LOGDIR
-        EOF
-        mkdir /opt/bitnami/spark/drivers
-        cd /opt/bitnami/spark/drivers
-        /opt/bitnami/scripts/spark/run.sh
 
   spark-worker:
     image: docker.io/bitnami/spark:3.5
@@ -55,9 +38,8 @@ services:
       endpoint_mode: vip
       placement:
         constraints:
-          - node.labels.analysis == spark
+          - node.labels.spark == true
     hostname: spark-worker1
-    user: root
     ports:
     - target: 8081
       published: 10036

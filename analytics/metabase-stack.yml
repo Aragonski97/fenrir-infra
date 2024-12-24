@@ -29,9 +29,9 @@ services:
         monitor: 5s
     healthcheck:
       test: ["curl", "--fail",  "-I", "http://localhost:3000/api/health || exit 1"]
-      interval: 10s
-      timeout: 10s
-      retries: 3
+      interval: 100s
+      timeout: 100s
+      retries: 5
     networks:
       - internal_network
 

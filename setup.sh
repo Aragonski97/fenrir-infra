@@ -20,7 +20,7 @@ docker node update --label-add dev=true $DOCKER_LEADER_NODE_ID
 docker node update --label-add airflow=true $DOCKER_LEADER_NODE_ID
 docker node update --label-add analytics=true $DOCKER_LEADER_NODE_ID
 docker node update --label-add postgres=true $DOCKER_LEADER_NODE_ID
-
+docker node update --label-add spark=true $DOCKER_LEADER_NODE_ID
 
 # create network for swarm
 docker network create \
@@ -52,3 +52,5 @@ docker stack deploy -c ${FENRIR_ROOT_DIR}/analytics/metabase-stack.yml metabase 
 docker stack deploy -c ${FENRIR_ROOT_DIR}/airflow/airflow-stack.yml airflow --detach=false
 
 docker stack deploy -c ${FENRIR_ROOT_DIR}/devbox/devbox-stack.yml devbox --detach=false
+
+docker stack deploy -c ${FENRIR_ROOT_DIR}/spark/spark-stack.yml spark --detach=false
