@@ -18,15 +18,13 @@ services:
           - node.labels.analytics == true
       restart_policy:
         condition: on-failure
-        max_attempts: 3
-        delay: 5s
+        max_attempts: 5
         window: 120s
       update_config:
         order: start-first
         parallelism: 1
-        delay: 5s
         failure_action: rollback
-        monitor: 5s
+        monitor: 30s
     healthcheck:
       test: ["curl", "--fail",  "-I", "http://localhost:3000/api/health || exit 1"]
       interval: 100s

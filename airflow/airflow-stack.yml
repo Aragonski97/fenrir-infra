@@ -61,6 +61,7 @@ services:
   # Required because of DockerOperator. For secure access and handling permissions.
   docker-socket-proxy:
     image: tecnativa/docker-socket-proxy:0.1.1
+    hostname: docker-socket-proxy
     environment:
       CONTAINERS: 1
       IMAGES: 1
@@ -69,7 +70,21 @@ services:
     user: root
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.airflow == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        failure_action: rollback
+        monitor: 5s
     networks:
       - internal_network
 
@@ -86,32 +101,60 @@ services:
       GIT_SYNC_WAIT: 60
     volumes:
       - dags:/tmp:rw
-    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.airflow == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        failure_action: rollback
+        monitor: 10s
     networks:
       - internal_network
 
   webserver:
     image: apache/airflow:2.10.4-python3.12
-    hostname: airflow_webserver
+    hostname: webserver
     ports:
       - target: 8080
         published: 10040
         mode: host
     environment:
       <<: *airflow-environment
+    volumes:
+      - dags:/opt/airflow/sync
+      - logs:/opt/airflow/logs
     command: webserver
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.airflow == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        failure_action: rollback
+        monitor: 15s
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
       interval: 10s
       timeout: 10s
       retries: 5
-    restart: always
-    volumes:
-      - dags:/opt/airflow/sync
-      - logs:/opt/airflow/logs
     networks:
       - internal_network
-    
+
 #    depends_on:
 #      - git-sync
 #      - traefik
@@ -124,22 +167,36 @@ services:
 
   scheduler:
     image: apache/airflow:2.10.4-python3.12
-    hostname: airflow_scheduler
-    environment:
-      <<: *airflow-environment
-    command: scheduler
-    restart: always
-    healthcheck:
-      test: ["CMD-SHELL", 'curl --silent http://airflow_webserver:8080/health | grep -A 1 scheduler | grep \"healthy\"']
-      interval: 10s
-      timeout: 10s
-      retries: 5
+    hostname: scheduler
     volumes:
       - dags:/opt/airflow/sync
       - logs:/opt/airflow/logs
     depends_on:
       - git-sync
       - webserver
+    environment:
+      <<: *airflow-environment
+    command: scheduler
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.airflow == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        failure_action: rollback
+        monitor: 15s
+    healthcheck:
+      test: ["CMD-SHELL", 'curl --silent http://airflow_webserver:8080/health | grep -A 1 scheduler | grep \"healthy\"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
     networks:
       - internal_network
 

@@ -1,34 +1,38 @@
 # airflow
 airflow/airflow.env
+airflow/volumes/
 
 # kafka
 kafka/config_store/*
-kafka/volumes/broker-0/data/*
-kafka/volumes/connect/data/*
-kafka/volumes/zookeeper/data/*
-kafka/volumes/zookeeper/logs/*
+kafka/volumes/
+#kafka/volumes/broker-0/data/*
+#kafka/volumes/connect/data/*
+#kafka/volumes/zookeeper/data/*
+#kafka/volumes/zookeeper/logs/*
 
 # portainer
-portainer/volumes/data/*
+#portainer/volumes/data/*
+portainer/volumes/
 
 # metabase
-analytics/volumes/metabase/data/*
+#analytics/volumes/metabase/data/*
+analytics/volumes/
 
 # postgres
-postgres/volumes-16/data/*
-postgres/volumes-17/data/*
+#postgres/volumes-16/data/*
+#postgres/volumes-17/data/*
+postgres/volume*/
 
 # devbox
-devbox/volumes/data/*
+#devbox/volumes/data/*
+devbox/volumes/
 
 # spark
-spark/spark.env
-spark/spark-worker.env
+#spark/spark.env
+#spark/spark-worker.env
 spark/mounted_volumes/
+#spark/volumes/
 spark/volumes/
-
-# confluent-kafka-yaml
-confluent-kafka-yaml/app/src/config/structlog_config.py
 
 # miscellaneous
 commit_message
