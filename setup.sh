@@ -14,6 +14,36 @@ docker swarm init --advertise-addr ${TSC_IP}
 export DOCKER_LEADER_NODE_ID=$(docker node ls | grep Leader | awk '{print $1}')
 
 
+export DEFAULT_PSG_VER=17
+
+
+# kafka volumes
+mkdir -p kafka/volumes/zookeeper/data
+mkdir -p kafka/volumes/zookeeper/logs
+mkdir -p ./kafka/volumes/broker-0/data
+mkdir -p ./kafka/volumes/connect/jars
+
+# metabase volumes
+mkdir -p analytics/volumes/metabase/data
+
+# devbox
+mkdir -p devbox/volumes/data
+
+# portainer
+mkdir -p portainer/volumes/data
+
+# postgres
+mkdir -p postgres/volumes/${DEFAULT_PSG_VER}
+
+# tailscale
+mkdir -p tailscale/volumes/data
+
+# spark
+mkdir -p spark/volumes/data
+mkdir -p spark/volumes/jars
+mkdir -p spark/volumes/logs
+
+
 # update for restraints
 docker node update --label-add kafka=true $DOCKER_LEADER_NODE_ID
 docker node update --label-add dev=true $DOCKER_LEADER_NODE_ID

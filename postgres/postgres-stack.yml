@@ -5,7 +5,7 @@ services:
     image: postgres:17
     hostname: postgres
     volumes:
-      - $FENRIR_ROOT_DIR/postgres/volumes-17/data:/var/lib/postgresql/data
+      - $FENRIR_ROOT_DIR/postgres/volumes/${DEFAULT_PSG_VER}:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
