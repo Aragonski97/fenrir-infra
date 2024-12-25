@@ -24,7 +24,7 @@ services:
         order: start-first
         parallelism: 1
         failure_action: rollback
-        monitor: 30s
+        monitor: 100s
     healthcheck:
       test: ["curl", "--fail",  "-I", "http://localhost:3000/api/health || exit 1"]
       interval: 100s

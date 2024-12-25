@@ -131,7 +131,20 @@ services:
     volumes:
       - dags:/opt/airflow/sync
       - logs:/opt/airflow/logs
-    command: webserver
+    command: >
+      bash -c "
+      airflow db upgrade &&
+      airflow users list ||
+      (airflow db migrate &&
+      airflow users create
+        -r Admin
+        -u airflow
+        -p airflow
+        -e l.jovanovic97@gmail.com
+        -f Lazar
+        -l Jovanovic) &&
+      airflow webserver
+      "
     deploy:
       mode: replicated
       replicas: 1
@@ -176,7 +189,7 @@ services:
       - webserver
     environment:
       <<: *airflow-environment
-    command: scheduler
+    command: airflow scheduler
     deploy:
       mode: replicated
       replicas: 1
