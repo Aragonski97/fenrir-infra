@@ -31,4 +31,6 @@ spark/volumes/
 confluent-kafka-yaml/app/src/config/structlog_config.py
 
 # miscellaneous
-commit_message.txt
+commit_message
+
+

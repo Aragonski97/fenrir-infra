@@ -1,0 +1,34 @@
+# https://tailscale.com/kb/1282/docker
+
+version: "3"
+services:
+  tailscale-nginx:
+    image: tailscale/tailscale:latest
+    hostname: tailscale-nginx
+    environment:
+      - TS_AUTHKEY=tskey-client-notAReal-OAuthClientSecret1Atawk
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - ${PWD}/tailscale-nginx/state:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+    networks:
+      - internal_network
+  nginx:
+    image: nginx
+    depends_on:
+      - tailscale-nginx
+    network_mode: service:tailscale-nginx
+
+networks:
+  internal_network:
+    name: $FENRIR_DOCKER_NETWORK
+    driver: overlay
+    attachable: true
+    external: true
