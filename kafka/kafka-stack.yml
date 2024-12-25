@@ -97,7 +97,6 @@ services:
       KAFKA_MAX_REQUEST_SEIZE: "5242880"
       KAFKA_MESSAGE_MAX_BYTES: "5242880"
       KAFKA_MAX_PARTITION_FETCH_BYTES: "5242880"
-      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
       - zoonavigator
@@ -203,14 +202,14 @@ services:
         published: 10008
         mode: host
     volumes:
-      - $FENRIR_ROOT_DIR/kafka/volumes/connect/jars:/etc/kafka-connect/jars/'
+      - $FENRIR_ROOT_DIR/kafka/volumes/connect/jars:/etc/kafka-connect/jars/
     environment:
-      CONNECT_BOOTSTRAP_SERVERS: "kafka:10003"
+      CONNECT_BOOTSTRAP_SERVERS: kafka:10003
       CONNECT_REST_PORT: 8083
-      CONNECT_GROUP_ID: compose-connect-group
-      CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
-      CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
-      CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
+      CONNECT_GROUP_ID: fenrir-connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: fenrir-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: fenrir-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: fenrir-connect-status
       CONNECT_KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
       CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
       CONNECT_VALUE_CONVERTER: 'io.confluent.connect.json.JsonSchemaConverter'
@@ -221,9 +220,10 @@ services:
       CONNECT_LOG4J_ROOT_LOGLEVEL: 'INFO'
       CONNECT_LOG4J_LOGGERS: 'org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR'
       CONNECT_PLUGIN_PATH: '/usr/share/java,/etc/kafka-connect/jars,/usr/share/confluent-hub-components/'
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: '1'
-      CONNECT_CONFIG_OFFSET_STORAGE_REPLICATION_FACTOR: '1'
-      CONNECT_CONFIG_STATUS_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_REPLICATION_FACTOR: 1
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
     depends_on:
       - kafka
       - schema-registry
@@ -238,8 +238,6 @@ services:
         confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:latest
         confluent-hub install --no-prompt confluentinc/kafka-connect-elasticsearch:14.0.7
         confluent-hub install --no-prompt jcustenborder/kafka-connect-transform-common:latest
-        confluent-hub install --no-prompt confluentinc/kafka-connect-rabbitmq:latest
-        confluent-hub install --no-prompt confluentinc/kafka-connect-rabbitmq-sink:latest
         confluent-hub install --no-prompt jcustenborder/kafka-connect-transform-common:latest
         /etc/confluent/docker/run
     deploy:
@@ -251,14 +249,7 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-        delay: 5s
         window: 120s
-      update_config:
-        order: start-first
-        parallelism: 1
-        delay: 5s
-        failure_action: rollback
-        monitor: 5s
     networks:
       - internal_network
 
