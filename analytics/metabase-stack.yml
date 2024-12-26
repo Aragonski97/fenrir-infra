@@ -1,15 +1,23 @@
 version: "3"
 services:
   metabase:
-    image: metabase/metabase:v0.51.9.4
+    image: metabase/metabase:v0.52.4
     hostname: metabase
     volumes:
-      - $FENRIR_ROOT_DIR/analytics/volumes/metabase/data/:/metadata.db/
+      - $FENRIR_ROOT_DIR/analytics/volumes/metabase/data/:/metabase-data/
       - /dev/urandom:/dev/random:ro
     ports:
       - target: 3000
         published: 10031
         mode: host
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: 5432
+      MB_DB_USER: metabase
+      MB_DB_PASS: metabase
+      MB_DB_HOST: postgres
+      MB_DB_FILE: /metabase-data/metabase.db
     deploy:
       mode: replicated
       replicas: 1
@@ -18,17 +26,19 @@ services:
           - node.labels.analytics == true
       restart_policy:
         condition: on-failure
-        max_attempts: 5
+        max_attempts: 3
+        delay: 10s
         window: 120s
       update_config:
         order: start-first
         parallelism: 1
+        delay: 10s
         failure_action: rollback
-        monitor: 100s
+        monitor: 5s
     healthcheck:
       test: ["curl", "--fail",  "-I", "http://localhost:3000/api/health || exit 1"]
       interval: 100s
-      timeout: 100s
+      timeout: 10s
       retries: 5
     networks:
       - internal_network

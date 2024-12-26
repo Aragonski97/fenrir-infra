@@ -16,7 +16,7 @@ portainer/volumes/
 
 # metabase
 #analytics/volumes/metabase/data/*
-analytics/volumes/
+analytics/volumes/*
 
 # postgres
 #postgres/volumes-16/data/*
@@ -33,6 +33,9 @@ devbox/volumes/
 spark/mounted_volumes/
 #spark/volumes/
 spark/volumes/
+
+# openrouteservice
+openrouteservice/serbia-latest.osm.pbf
 
 # miscellaneous
 commit_message
