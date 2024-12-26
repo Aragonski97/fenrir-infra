@@ -191,9 +191,6 @@ services:
     networks:
       - internal_network
 
-    networks:
-      - internal_network
-
   kafka-connect:
     image: confluentinc/cp-kafka-connect:7.8.0
     hostname: kafka-connect
