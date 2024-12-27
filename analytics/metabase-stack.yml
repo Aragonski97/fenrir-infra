@@ -35,11 +35,11 @@ services:
         delay: 10s
         failure_action: rollback
         monitor: 5s
-    healthcheck:
-      test: ["curl", "--fail",  "-I", "http://localhost:3000/api/health || exit 1"]
-      interval: 100s
-      timeout: 10s
-      retries: 5
+#    healthcheck:
+#      test: ["CMD-SHELL", "curl -s 'http://127.0.0.1:3000/api/health' | grep '{\"status\":\"ok\"}'; do sleep 1; done"]
+#      interval: 100s
+#      timeout: 10s
+#      retries: 5
     networks:
       - internal_network
 

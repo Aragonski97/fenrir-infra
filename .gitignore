@@ -37,6 +37,9 @@ spark/volumes/
 # openrouteservice
 openrouteservice/serbia-latest.osm.pbf
 
+# flink
+flink/volumes/
+
 # miscellaneous
 commit_message
 
