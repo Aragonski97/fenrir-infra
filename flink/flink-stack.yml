@@ -1,0 +1,79 @@
+version: "3"
+services:
+  jobmanager:
+    image: flink:2.0
+    ports:
+      - target: 8081
+        published: 10065
+        mode: host
+      - target: 6123
+        published: 10066
+        mode: host
+      - target: 6124
+        published: 10067
+        mode: host
+    command: jobmanager
+    volumes:
+      - $FENRIR_ROOT_DIR/flink/volumes/jobmanager/state:/flink/state/
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.flink == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 5s
+    networks:
+      - internal_network
+
+  taskmanager:
+    image: flink:2.0
+    depends_on:
+      - jobmanager
+    command: taskmanager
+    volumes:
+      - $FENRIR_ROOT_DIR/flink/volumes/taskmanager/state:/flink/state/
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTaskSlots: 3
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.flink == true
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 120s
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 5s
+    networks:
+      - internal_network
+
+networks:
+  internal_network:
+    name: $FENRIR_DOCKER_NETWORK
+    driver: overlay
+    attachable: true
+    external: true

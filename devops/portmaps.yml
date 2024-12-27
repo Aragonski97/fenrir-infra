@@ -57,46 +57,63 @@ analytics-stack: 10030-10059
       - target: 3000
         published: 10031
         mode: host
+
+
+processing-stack: 10060 - 10079
   - spark:
       - target: 8080
-        published: 10032
+        published: 10060
         mode: host
       - target: 7077
-        published: 10033
+        published: 10061
         mode: host
   - spark-driver:
       - target: 4040
-        published: 10034
+        published: 10062
         mode: host
       - target: 18080
-        published: 10035
+        published: 10063
         mode: host
   - spark-worker1:
       - target: 8081
-        published: 10036
+        published: 10064
         mode: host
+  - flink-jobmanager:
+      - target: 8081
+        published: 10065
+        mode: host
+      - target: 6123
+        published: 10066
+        mode: host
+      - target: 6124
+        published: 10067
+        mode: host
+  - flink-taskmanager:
+      - target:
+        published
+        
 
 
-orchestration-stack: 10040-10059
+orchestration-stack: 10080 - 10099
 
   # airflow
   - webserver:
       - target: 8080
-        published: 10040
+        published: 10080
         mode: host
 
 
-portainer-stack: 10060-10069
+portainer-stack: 10100 - 10110
 
   portainer:
     - target: 9443
-      published: 10060
+      published: 10100
       mode: host
     - target: 8000
-      published: 10061
+      published: 10101
       mode: host
     - target: 9000
-      published: 10062
+      published: 10102
       mode: host
 
 custom: 20000 >

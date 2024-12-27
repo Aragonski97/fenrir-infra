@@ -160,11 +160,6 @@ services:
         parallelism: 1
         failure_action: rollback
         monitor: 15s
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
     networks:
       - internal_network
 
@@ -205,11 +200,6 @@ services:
         parallelism: 1
         failure_action: rollback
         monitor: 15s
-    healthcheck:
-      test: ["CMD-SHELL", 'curl --silent http://airflow_webserver:8080/health | grep -A 1 scheduler | grep \"healthy\"']
-      interval: 10s
-      timeout: 10s
-      retries: 5
     networks:
       - internal_network
 

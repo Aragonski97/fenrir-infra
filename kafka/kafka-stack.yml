@@ -87,6 +87,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:10003,EXTERNAL://${TSC_IP}:9092,DOCKER://host.docker.internal:10004
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_BROKER_ID: 1
+      KAFKA_LOG_DIRS: /var/lib/kafka/logs
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -101,6 +102,7 @@ services:
       - zookeeper
       - zoonavigator
     volumes:
+      - $FENRIR_ROOT_DIR/kafka/volumes/broker-0/logs:/var/lib/kafka/logs
       - $FENRIR_ROOT_DIR/kafka/volumes/broker-0/data:/var/lib/kafka/data
     deploy:
       mode: replicated

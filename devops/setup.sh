@@ -1,14 +1,10 @@
 #!/bin/bash
 
 # IPv4 address expected
-
-export TSC_IP=$(tailscale ip | awk 'FNR == 1 {print}')
-export TSC_IP_BASE=$(tailscale ip | awk 'NR==1' | grep -oP '^\d+\.\d+')
-export FENRIR_DOCKER_NETWORK=$(hostname)-network
-export FENRIR_ROOT_DIR=$(pwd)
-
+source ./export_vars.sh
 # init docker swarm
-docker swarm init --advertise-addr ${TSC_IP}
+# $SUDO_PASS needs to be exported manually
+sudo docker swarm init --advertise-addr ${TSC_IP}
 
 # docker swarm leader id
 export DOCKER_LEADER_NODE_ID=$(docker node ls | grep Leader | awk '{print $1}')
@@ -18,30 +14,35 @@ export DEFAULT_PSG_VER=17
 
 
 # kafka volumes
-mkdir -p kafka/volumes/zookeeper/data
-mkdir -p kafka/volumes/zookeeper/logs
-mkdir -p ./kafka/volumes/broker-0/data
-mkdir -p ./kafka/volumes/connect/jars
+mkdir -p $FENRIR_ROOT_DIR/kafka/volumes/zookeeper/data
+mkdir -p $FENRIR_ROOT_DIR/kafka/volumes/zookeeper/logs
+mkdir -p $FENRIR_ROOT_DIR/kafka/volumes/broker-0/data
+mkdir -p $FENRIR_ROOT_DIR/kafka/volumes/broker-0/logs
+mkdir -p $FENRIR_ROOT_DIR/kafka/volumes/connect/jars
 
 # metabase volumes
-mkdir -p analytics/volumes/metabase/data
+mkdir -p $FENRIR_ROOT_DIR/analytics/volumes/metabase/data
 
 # devbox
-mkdir -p devbox/volumes/data
+mkdir -p $FENRIR_ROOT_DIR/devbox/volumes/data
 
 # portainer
-mkdir -p portainer/volumes/data
+mkdir -p $FENRIR_ROOT_DIR/portainer/volumes/data
 
 # postgres
-mkdir -p postgres/volumes/${DEFAULT_PSG_VER}
+mkdir -p $FENRIR_ROOT_DIR/postgres/volumes/${DEFAULT_PSG_VER}
 
 # tailscale
-mkdir -p tailscale/volumes/data
+mkdir -p $FENRIR_ROOT_DIR/tailscale/volumes/data
 
 # spark
-mkdir -p spark/volumes/data
-mkdir -p spark/volumes/jars
-mkdir -p spark/volumes/logs
+mkdir -p $FENRIR_ROOT_DIR/spark/volumes/data
+mkdir -p $FENRIR_ROOT_DIR/spark/volumes/jars
+mkdir -p $FENRIR_ROOT_DIR/spark/volumes/logs
+
+# flink
+mkdir -p $FENRIR_ROOT_DIR/flink/volumes/taskmanager/state
+mkdir -p $FENRIR_ROOT_DIR/flink/volumes/jobmanager/state
 
 
 # update for restraints
@@ -51,6 +52,8 @@ docker node update --label-add airflow=true $DOCKER_LEADER_NODE_ID
 docker node update --label-add analytics=true $DOCKER_LEADER_NODE_ID
 docker node update --label-add postgres=true $DOCKER_LEADER_NODE_ID
 docker node update --label-add spark=true $DOCKER_LEADER_NODE_ID
+docker node update --label-add flink=true $DOCKER_LEADER_NODE_ID
+
 
 # create network for swarm
 docker network create \
@@ -84,3 +87,5 @@ docker stack deploy -c ${FENRIR_ROOT_DIR}/airflow/airflow-stack.yml airflow --de
 docker stack deploy -c ${FENRIR_ROOT_DIR}/devbox/devbox-stack.yml devbox --detach=false
 
 docker stack deploy -c ${FENRIR_ROOT_DIR}/spark/spark-stack.yml spark --detach=false
+
+docker stack deploy -c ${FENRIR_ROOT_DIR}/flink/flink-stack.yml flink --detach=false
